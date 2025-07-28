@@ -1,0 +1,48 @@
+name: Build iOS IPA with Flutter
+
+on:
+  push:
+    branches:
+      - main # O la rama que uses para tu código principal (ej. master, develop)
+
+jobs:
+  build:
+    runs-on: macos-latest # Usamos un runner de macOS para compilar iOS
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4 # Obtiene tu código del repositorio
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable' # Puedes usar 'beta' o 'dev' si lo necesitas
+          flutter-version: '3.22.2' # Asegúrate de que esta sea la versión de Flutter que usas o una compatible
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build iOS (Release)
+        run: flutter build ios --release --no-codesign # --no-codesign es crucial si no tienes una cuenta de desarrollador de Apple configurada en GitHub Actions. Si tienes una cuenta de desarrollador de Apple y quieres firmar la app, el proceso es más complejo e implica gestión de certificados y perfiles.
+
+      - name: Archive IPA
+        run: |
+          mkdir -p build/ipa
+          # Encuentra el .app bundle dentro del directorio de compilación
+          # La ruta exacta puede variar ligeramente dependiendo de tu proyecto Flutter y Xcode
+          # Comprueba la salida de 'flutter build ios' para la ruta exacta si esta falla.
+          APP_PATH=$(find build/ios/Runner.xcarchive/Products/Applications -name "*.app" -maxdepth 1)
+          
+          # Puedes intentar copiar el .app directamente al directorio de .ipa
+          cp -r "$APP_PATH" build/ipa/Runner.app
+
+          # Si quieres crear un .ipa real (útil para sideloading o pruebas, pero no para Cydia directamente):
+          # xcrun -sdk iphoneos PackageApplication -v "$APP_PATH" -o "$(pwd)/build/ipa/YourAppName.ipa"
+
+      - name: Upload .app bundle as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-app-ios-bundle
+          path: build/ipa/Runner.app # Sube el directorio .app
+          # Alternativamente, si creaste un .ipa:
+          # path: build/ipa/YourAppName.ipa
