@@ -17,7 +17,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable' # Puedes usar 'beta' o 'dev' si lo necesitas
-          flutter-version: '3.22.2' # Asegúrate de que esta sea la versión de Flutter que usas o una compatible
+          flutter-version: '3.32.8'# Asegúrate de que esta sea la versión de Flutter que usas o una compatible
 
       - name: Get Flutter dependencies
         run: flutter pub get
